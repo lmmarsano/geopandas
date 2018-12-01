@@ -66,13 +66,14 @@ def connect_spatialite():
     Exceptions
     ----------
     ``AttributeError`` on missing support for loadable SQLite extensions
-    ``sqlite3.OperationalError`` on missing SpatiaLite
+    ``sqlite3.OperationalError`` on missing SpatiaLite or initialization failure
     """
     try:
         with sqlite3.connect(':memory:') as con:
             con.enable_load_extension(True)
             con.load_extension('mod_spatialite')
-            con.execute('SELECT InitSpatialMetaData(TRUE)')
+            if not con.execute('SELECT InitSpatialMetaData(TRUE)').fetchone()[0]:
+                raise sqlite3.OperationalError('InitSpatialMetaData failed')
     except Exception:
         con.close()
         raise
